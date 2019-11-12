@@ -11,7 +11,7 @@ namespace MusicAnalyser.Core
     {
         private const int ChunkSize = 1024;
 
-        public static void GetFingerprint(string filename)
+        public static ulong[] GetFingerprint(string filename)
         {
             using var data = new AudioFileReader(filename);
 
@@ -46,22 +46,24 @@ namespace MusicAnalyser.Core
                     complex[i].Y = 0;
                 }
 
-                FastFourierTransform.FFT(true, m, complex);
+                FastFourierTransform.FFT(false, m, complex);
 
                 transformed.Add(complex);
             }
 
-            var keyPoints = new List<double[]>();
+            var keyPoints = new List<ulong>();
 
             foreach (var item in transformed)
             {
                 keyPoints.Add(GetKeyPoints(item));
             }
+
+            return keyPoints.ToArray();
         }
 
-        private static double[] GetKeyPoints(Complex[] data)
+        private static ulong GetKeyPoints(Complex[] data)
         {
-            var points = new double[6];
+            var points = new byte[6];
 
             var  ranges = new[] { 0, 10, 20, 40, 80, 160, 510 };
 
@@ -79,10 +81,10 @@ namespace MusicAnalyser.Core
                     }
                 }
 
-                points[i] = (int) max;
+                points[i] = (byte) max;
             }
 
-            return points;
+            return points[0] + ((ulong) points[1] << 8) + ((ulong) points[2] << 16) + ((ulong) points[3] << 24) + ((ulong) points[4] << 32) + ((ulong) points[5] << 40);
         }
     }
 }
