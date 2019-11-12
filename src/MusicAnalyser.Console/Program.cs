@@ -75,6 +75,24 @@ namespace MusicAnalyser.Console
             stream.Dispose();
 
             var fingerprint = Fingerprinter.GetFingerprint("temp.wav");
+
+            foreach (var print in fingerprints)
+            {
+                var matches = 0;
+
+                foreach (var key in print.Value)
+                {
+                    foreach (var subKey in fingerprint)
+                    {
+                        if (key == subKey)
+                        {
+                            matches++;
+                        }
+                    }
+                }
+
+                WriteLine($"{print.Key} gets {matches} matches");
+            }
         }
 
         private static Dictionary<string, ulong[]> GetFingerprints(string path)
