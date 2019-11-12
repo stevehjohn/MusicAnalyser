@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using MusicAnalyser.Core;
+using NAudio.Wave;
 using Newtonsoft.Json;
 using static System.Console;
 
@@ -38,6 +40,41 @@ namespace MusicAnalyser.Console
                 fingerprints = JsonConvert.DeserializeObject<Dictionary<string, ulong[]>>(File.ReadAllText("cache.json"));
             }
 
+            WriteLine("Press enter to start listening...");
+
+            ReadLine();
+
+            using var source = new WaveInEvent();
+
+            var buffer = new byte[source.WaveFormat.AverageBytesPerSecond * 20];
+
+            var stream = new WaveFileWriter("temp.wav", source.WaveFormat);
+
+            source.DataAvailable += (s, a) =>
+            {
+                if (stream.Position + a.BytesRecorded > buffer.Length)
+                {
+                    return;
+                }
+
+                stream.Write(a.Buffer, 0, a.BytesRecorded);
+            };
+
+            source.StartRecording();
+
+            for (var i = 0; i < 20; i++)
+            {
+                WriteLine(i);
+
+                Thread.Sleep(1000);
+            }
+
+            source.StopRecording();
+
+            stream.Close();
+            stream.Dispose();
+
+            var fingerprint = Fingerprinter.GetFingerprint("temp.wav");
         }
 
         private static Dictionary<string, ulong[]> GetFingerprints(string path)

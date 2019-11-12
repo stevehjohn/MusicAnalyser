@@ -15,13 +15,22 @@ namespace MusicAnalyser.Core
         {
             using var data = new AudioFileReader(filename);
 
-            var monoProvider = new StereoToMonoSampleProvider(data)
-                       {
-                           LeftVolume = 1.0f,
-                           RightVolume = 1.0f
-                       };
+            ISampleProvider mono;
 
-            var mono = monoProvider.ToMono();
+            if (data.WaveFormat.Channels == 2)
+            {
+                var monoProvider = new StereoToMonoSampleProvider(data)
+                                   {
+                                       LeftVolume = 1.0f,
+                                       RightVolume = 1.0f
+                                   };
+
+                mono = monoProvider.ToMono();
+            }
+            else
+            {
+                mono = data;
+            }
 
             var buffer = new float[ChunkSize];
 
