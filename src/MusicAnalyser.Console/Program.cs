@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using MusicAnalyser.Core;
 using Newtonsoft.Json;
 using static System.Console;
@@ -18,9 +17,17 @@ namespace MusicAnalyser.Console
 
             if (! File.Exists("cache.json"))
             {
+                var stopwatch = new Stopwatch();
+
+                stopwatch.Start();
+
                 WriteLine("Cache not found, generating fingerprints.");
 
                 fingerprints = GetFingerprints(path);
+
+                stopwatch.Stop();
+
+                WriteLine($"{fingerprints.Count} fingerprints generated in {(int) stopwatch.Elapsed.TotalSeconds}s");
 
                 File.WriteAllText("cache.json", JsonConvert.SerializeObject(fingerprints));
             }
