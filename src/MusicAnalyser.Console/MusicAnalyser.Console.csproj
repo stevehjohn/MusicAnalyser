@@ -14,4 +14,10 @@
     <ProjectReference Include="..\MusicAnalyser.Core\MusicAnalyser.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="04 Blood Brothers.m4a">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using MusicAnalyser.Core;
 using NAudio.Wave;
@@ -40,41 +42,47 @@ namespace MusicAnalyser.Console
                 fingerprints = JsonConvert.DeserializeObject<Dictionary<string, ulong[]>>(File.ReadAllText("cache.json"));
             }
 
-            WriteLine("Press enter to start listening...");
-
-            ReadLine();
-
-            using var source = new WaveInEvent();
-
-            var buffer = new byte[source.WaveFormat.AverageBytesPerSecond * 20];
-
-            var stream = new WaveFileWriter("temp.wav", source.WaveFormat);
-
-            source.DataAvailable += (s, a) =>
+            if (! File.Exists("temp.wav"))
             {
-                if (stream.Position + a.BytesRecorded > buffer.Length)
+                WriteLine("Press enter to start listening...");
+
+                ReadLine();
+
+                using var source = new WaveInEvent();
+
+                var buffer = new byte[source.WaveFormat.AverageBytesPerSecond * 20];
+
+                var stream = new WaveFileWriter("temp.wav", source.WaveFormat);
+
+                source.DataAvailable += (s, a) =>
                 {
-                    return;
+                    if (stream.Position + a.BytesRecorded > buffer.Length)
+                    {
+                        return;
+                    }
+
+                    stream.Write(a.Buffer, 0, a.BytesRecorded);
+                };
+
+                source.StartRecording();
+
+                for (var i = 0; i < 20; i++)
+                {
+                    WriteLine(i);
+
+                    Thread.Sleep(1000);
                 }
 
-                stream.Write(a.Buffer, 0, a.BytesRecorded);
-            };
+                source.StopRecording();
 
-            source.StartRecording();
-
-            for (var i = 0; i < 20; i++)
-            {
-                WriteLine(i);
-
-                Thread.Sleep(1000);
+                stream.Close();
+                stream.Dispose();
             }
 
-            source.StopRecording();
+            //var fingerprint = Fingerprinter.GetFingerprint("temp.wav");
+            var fingerprint = Fingerprinter.GetFingerprint("04 Blood Brothers.m4a");
 
-            stream.Close();
-            stream.Dispose();
-
-            var fingerprint = Fingerprinter.GetFingerprint("temp.wav");
+            var results = new List<Tuple<int, string>>();
 
             foreach (var print in fingerprints)
             {
@@ -91,8 +99,14 @@ namespace MusicAnalyser.Console
                     }
                 }
 
-                WriteLine($"{print.Key} gets {matches} matches");
+                WriteLine($"{print.Key} gets {matches} matches.");
+
+                results.Add(new Tuple<int, string>(matches, print.Key));
             }
+
+            WriteLine("\n\n\n");
+
+            results.OrderBy(t => t.Item1).ToList().ForEach(t => WriteLine($"{t.Item2} gets {t.Item1} matches."));
         }
 
         private static Dictionary<string, ulong[]> GetFingerprints(string path)
