@@ -106,7 +106,17 @@ namespace MusicAnalyser.Console
 
             WriteLine("\n\n\n");
 
-            results.OrderBy(t => t.Item1).ToList().ForEach(t => WriteLine($"{t.Item2} gets {t.Item1} matches."));
+            results.OrderBy(t => t.Item1).ToList().ForEach(t =>
+            {
+                if (t.Item2 == "04 Blood Brothers.mp3")
+                {
+                    ForegroundColor = ConsoleColor.Cyan;
+                }
+
+                WriteLine($"{t.Item1,5} : {t.Item2}");
+
+                ForegroundColor = ConsoleColor.Green;
+            });
         }
 
         private static Dictionary<string, ulong[]> GetFingerprints(string path)
